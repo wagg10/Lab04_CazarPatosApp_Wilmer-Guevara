@@ -4,84 +4,105 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class LoginActivity : AppCompatActivity() {
 
-    // Variables globales
-    lateinit var editTextEmail: EditText
-    lateinit var editTextPassword: EditText
-    lateinit var buttonLogin: Button
-    lateinit var buttonNewUser: Button
-    lateinit var mediaPlayer: MediaPlayer
+    private lateinit var manejadorArchivo: FileHandler
+    private lateinit var editTextEmail: EditText
+    private lateinit var editTextPassword: EditText
+    private lateinit var buttonLogin: Button
+    private lateinit var buttonNewUser: Button
+    private lateinit var checkBoxRecordarme: CheckBox
+    private lateinit var mediaPlayer: MediaPlayer
+
+    companion object {
+        const val EXTRA_LOGIN = "extra_login"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()  // Para ajustar la vista al borde de la pantalla
-        setContentView(R.layout.activity_login)  // Asegúrate de que esté apuntando al diseño correcto
+        setContentView(R.layout.activity_login)
 
         // Inicialización de variables
+        //manejadorArchivo = SharedPreferencesManager(this)
+        //manejadorArchivo = EncryptedSharedPreferencesManager(this)
+        //manejadorArchivo = InternalFileManager(this)
+        manejadorArchivo = ExternalFileManager(this)
+
         editTextEmail = findViewById(R.id.editTextEmail)
         editTextPassword = findViewById(R.id.editTextPassword)
         buttonLogin = findViewById(R.id.buttonLogin)
         buttonNewUser = findViewById(R.id.buttonNewUser)
+        checkBoxRecordarme = findViewById(R.id.checkBoxRecordarme)
 
-        // Eventos clic
+        // Leer preferencias guardadas
+        LeerDatosDePreferencias()
+
+        // Configurar botón Login
         buttonLogin.setOnClickListener {
             val email = editTextEmail.text.toString()
             val clave = editTextPassword.text.toString()
 
-            // Validaciones de datos requeridos y formatos
-            if (!validateRequiredData()) return@setOnClickListener
+            // Validaciones (asumiendo que ValidarDatosRequeridos() existe)
+            if (!ValidarDatosRequeridos()) return@setOnClickListener
 
-            // Si pasa validación de datos requeridos, ir a la pantalla principal
-            val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra(EXTRA_LOGIN, email)
-            startActivity(intent)
-            finish()  // Termina la actividad actual (LoginActivity) para que no regrese al presionar atrás
+            // Guardar datos en preferencias si corresponde
+            GuardarDatosEnPreferencias()
+
+            // Ir a la pantalla principal
+            val intencion = Intent(this, MainActivity::class.java)
+            intencion.putExtra(EXTRA_LOGIN, email)
+            startActivity(intencion)
         }
 
+        // Botón de nuevo usuario (a definir)
         buttonNewUser.setOnClickListener {
-            // Aquí puedes manejar el registro de un nuevo usuario si es necesario
+            // Implementar acción si se desea
         }
 
-        // Reproducir música en la pantalla de inicio
+        // Reproducir sonido
         mediaPlayer = MediaPlayer.create(this, R.raw.title_screen)
         mediaPlayer.start()
     }
 
-    // Función de validación de datos requeridos
-    private fun validateRequiredData(): Boolean {
+    private fun LeerDatosDePreferencias() {
+        val listadoLeido = manejadorArchivo.ReadInformation()
+
+        if (listadoLeido.first.isNotEmpty()) {
+            checkBoxRecordarme.isChecked = true
+        }
+
+        editTextEmail.setText(listadoLeido.first)
+        editTextPassword.setText(listadoLeido.second)
+    }
+
+    private fun GuardarDatosEnPreferencias() {
         val email = editTextEmail.text.toString()
-        val password = editTextPassword.text.toString()
+        val clave = editTextPassword.text.toString()
 
-        if (email.isEmpty()) {
-            editTextEmail.error = getString(R.string.error_email_required)
-            editTextEmail.requestFocus()
+        val listadoAGrabar: Pair<String, String> = if (checkBoxRecordarme.isChecked) {
+            email to clave
+        } else {
+            "" to ""
+        }
+
+        manejadorArchivo.SaveInformation(listadoAGrabar)
+    }
+
+    // Este método debe existir. Aquí un ejemplo simple
+    private fun ValidarDatosRequeridos(): Boolean {
+        val email = editTextEmail.text.toString()
+        val clave = editTextPassword.text.toString()
+
+        if (email.isBlank() || clave.isBlank()) {
+            Toast.makeText(this, "Por favor, ingresa tu correo y contraseña", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (password.isEmpty()) {
-            editTextPassword.error = getString(R.string.error_password_required)
-            editTextPassword.requestFocus()
-            return false
-        }
-        if (password.length < 3) {
-            editTextPassword.error = getString(R.string.error_password_min_length)
-            editTextPassword.requestFocus()
-            return false
-        }
+
         return true
-    }
-
-    // Libera el MediaPlayer cuando se destruye la actividad
-    override fun onDestroy() {
-        mediaPlayer.release()
-        super.onDestroy()
-    }
-
-    companion object {
-        const val EXTRA_LOGIN = "com.epnfis.cazarpatos.EXTRA_LOGIN"
     }
 }
