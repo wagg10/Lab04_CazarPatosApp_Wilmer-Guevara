@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="GuevaraWilmer.cazarpatos">
 
+    <!-- Permisos necesarios, por ejemplo, si estás utilizando internet -->
+    <!-- Agrega permisos si es necesario -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,28 +16,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CazarPatos.Personalizado"
-        tools:targetApi="31">
-        <activity android:name=".RankingActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        tools:targetApi="31"
+        android:enableOnBackInvokedCallback="true">
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <!-- Actividad RankingActivity sin el filtro MAIN, para que no sea la pantalla de inicio -->
+        <activity
+            android:name=".RankingActivity"
+            android:exported="true">
         </activity>
+
+        <!-- Actividad LoginActivity con el filtro MAIN para que sea la pantalla inicial -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Actividad RegisterActivity para registrar al nuevo usuario -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="true">
+        </activity>
+
+        <!-- Actividad MainActivity con exported="false" ya que no es la pantalla de inicio -->
         <activity
             android:name=".MainActivity"
-            android:exported="false"></activity>
-    </application>
+            android:exported="false" />
 
+    </application>
 
 </manifest>
